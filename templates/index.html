@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 Lotto Ultimate v2.0 - AI 로또 분석 시스템</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🎰</span>
+                <div class="logo-text">
+                    <h1>Lotto Ultimate</h1>
+                    <span class="version">v2.0 - AI Analytics System</span>
+                </div>
+            </div>
+            <div class="header-info" id="headerInfo">
+                <div class="info-item">
+                    <span class="info-label">총 회차</span>
+                    <span class="info-value" id="totalRounds">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">최근 당첨</span>
+                    <span class="info-value" id="lastDraw">-</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="panel-title">
+                <span class="panel-icon">⚙️</span>
+                <h2>분석 설정</h2>
+            </div>
+            <div class="control-grid">
+                <div class="control-item">
+                    <label for="numPredictions">예측 조합 수</label>
+                    <select id="numPredictions">
+                        <option value="5" selected>5개</option>
+                        <option value="10">10개</option>
+                        <option value="15">15개</option>
+                        <option value="20">20개</option>
+                    </select>
+                </div>
+                <div class="control-item checkbox-item">
+                    <input type="checkbox" id="runBacktest">
+                    <label for="runBacktest">백테스팅 실행</label>
+                    <span class="tooltip">과거 데이터로 알고리즘 검증</span>
+                </div>
+                <div class="control-item checkbox-item">
+                    <input type="checkbox" id="runOptimization">
+                    <label for="runOptimization">자동 최적화</label>
+                    <span class="tooltip">최적 가중치 자동 탐색</span>
+                </div>
+            </div>
+            <div class="button-group">
+                <button id="btnQuickPredict" class="btn btn-secondary">
+                    <span class="btn-icon">⚡</span>
+                    빠른 예측
+                </button>
+                <button id="btnFullAnalysis" class="btn btn-primary">
+                    <span class="btn-icon">🔬</span>
+                    전체 분석
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p class="loading-text" id="loadingText">분석 중...</p>
+                <p class="loading-sub">잠시만 기다려주세요</p>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div class="results-container" id="resultsContainer">
+            
+            <!-- Predictions Section -->
+            <section class="result-section predictions-section" id="predictionsSection">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🎯</span>
+                        <h2>AI 추천 번호</h2>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-small" id="btnCopyAll">
+                            <span>📋</span> 전체 복사
+                        </button>
+                    </div>
+                </div>
+                <div class="predictions-grid" id="predictionsGrid">
+                    <!-- Predictions will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="result-section analysis-section" id="analysisSection">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">📊</span>
+                        <h2>번호 분석</h2>
+                    </div>
+                </div>
+                
+                <div class="analysis-grid">
+                    <!-- Hot Numbers -->
+                    <div class="analysis-card">
+                        <h3><span class="card-icon">🔥</span> HOT 번호 (상위 10개)</h3>
+                        <div class="number-list hot-numbers" id="hotNumbers">
+                            <!-- Hot numbers will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Cold Numbers -->
+                    <div class="analysis-card">
+                        <h3><span class="card-icon">❄️</span> COLD 번호 (하위 10개)</h3>
+                        <div class="number-list cold-numbers" id="coldNumbers">
+                            <!-- Cold numbers will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Rising Numbers -->
+                    <div class="analysis-card">
+                        <h3><span class="card-icon">📈</span> 상승 추세 번호</h3>
+                        <div class="number-list rising-numbers" id="risingNumbers">
+                            <!-- Rising numbers will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Top Pairs -->
+                    <div class="analysis-card">
+                        <h3><span class="card-icon">👥</span> 동반 출현 쌍 (상위 10개)</h3>
+                        <div class="pairs-list" id="topPairs">
+                            <!-- Pairs will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="result-section charts-section" id="chartsSection">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">📈</span>
+                        <h2>시각화</h2>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>번호별 점수</h3>
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>미출현 간격</h3>
+                        <canvas id="gapChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>모멘텀 지표</h3>
+                        <canvas id="momentumChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>군집 분포</h3>
+                        <canvas id="clusterChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clustering Section -->
+            <section class="result-section cluster-section" id="clusterSection">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🔮</span>
+                        <h2>기하학적 군집화 분석</h2>
+                    </div>
+                </div>
+                <div class="cluster-grid" id="clusterGrid">
+                    <!-- Clusters will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Backtest Section -->
+            <section class="result-section backtest-section" id="backtestSection" style="display: none;">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🔬</span>
+                        <h2>백테스팅 결과</h2>
+                    </div>
+                </div>
+                <div class="backtest-content" id="backtestContent">
+                    <!-- Backtest results will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Optimization Section -->
+            <section class="result-section optimization-section" id="optimizationSection" style="display: none;">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="section-icon">🔧</span>
+                        <h2>하이퍼파라미터 최적화 결과</h2>
+                    </div>
+                </div>
+                <div class="optimization-content" id="optimizationContent">
+                    <!-- Optimization results will be inserted here -->
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🎲</div>
+            <h2>분석을 시작하세요</h2>
+            <p>위의 버튼을 클릭하여 AI 기반 로또 번호 분석을 시작합니다.</p>
+            <div class="features-list">
+                <div class="feature-item">
+                    <span class="feature-icon">📊</span>
+                    <span>다중 구간 빈도 분석</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔄</span>
+                    <span>출현 주기 이탈도 분석</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">👥</span>
+                    <span>동반 출현 쌍 분석</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔮</span>
+                    <span>K-Means 군집화</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔬</span>
+                    <span>백테스팅 검증</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔧</span>
+                    <span>자동 가중치 최적화</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>🎰 Lotto Ultimate v2.0 - AI 기반 로또 분석 시스템</p>
+            <p class="disclaimer">※ 본 시스템은 통계적 분석 도구이며, 당첨을 보장하지 않습니다.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
